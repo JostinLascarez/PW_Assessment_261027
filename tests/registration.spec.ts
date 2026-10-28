@@ -21,6 +21,7 @@ test.describe('Scenario A: User registration', { tag: '@regression' }, () => {
 
       await loginPage.goto();
       await loginPage.openRegistration();
+
       await test.step('Verify the registration form is displayed', () =>
         registerPage.expectLoaded());
 
