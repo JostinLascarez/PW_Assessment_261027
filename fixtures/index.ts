@@ -3,6 +3,7 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import type { NewUser } from '../types/user';
+import { env } from '../utils/env';
 import { createUser } from '../utils/test-data';
 
 /** Page objects and preconditions injected into the specs. */
@@ -22,6 +23,14 @@ export interface Fixtures {
    * than a ready-made user so data-driven tests only register when a case needs it.
    */
   registerUser: () => Promise<NewUser>;
+  /**
+   * Dashboard of the demo account, logged in through the UI (precondition of Scenario C).
+   *
+   * A UI login is used instead of a saved `storageState`: part of the session lives in
+   * sessionStorage, which `storageState` does not persist, and the test stays independent of the
+   * application's internal storage keys.
+   */
+  loggedInDashboard: DashboardPage;
 }
 
 /**
@@ -51,6 +60,12 @@ export const test = base.extend<Fixtures>({
         return user;
       }),
     );
+  },
+  loggedInDashboard: async ({ loginPage, dashboardPage }, use) => {
+    await loginPage.goto();
+    await loginPage.login(env.demoUser);
+    await dashboardPage.expectLoaded();
+    await use(dashboardPage);
   },
 });
 
