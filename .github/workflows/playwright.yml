@@ -1,0 +1,82 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Type check, lint and E2E tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Non-sensitive configuration: repository variables, readable in the logs.
+      BASE_URL: ${{ vars.BASE_URL }}
+      REGISTER_USERNAME_PREFIX: ${{ vars.REGISTER_USERNAME_PREFIX }}
+      REGISTER_EMAIL_DOMAIN: ${{ vars.REGISTER_EMAIL_DOMAIN }}
+      # Credentials: repository secrets, masked in the logs.
+      DEMO_USERNAME: ${{ secrets.DEMO_USERNAME }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+      REGISTER_PASSWORD: ${{ secrets.REGISTER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run tests on Chromium, Firefox and WebKit
+        run: npm test
+
+      - name: Upload HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Package HTML report for GitHub Pages
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: playwright-report/
+
+  deploy-report:
+    name: Publish HTML report to GitHub Pages
+    needs: test
+    # Publish even when tests fail: a failing report is the one worth reading.
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
