@@ -1,0 +1,21 @@
+{
+  "name": "pw_assessment_261027",
+  "version": "1.0.0",
+  "private": true,
+  "description": "End-to-end UI test automation for the Product Manager demo app with Playwright, TypeScript and the Page Object Model.",
+  "author": "Jostin Lascarez <jostinlascarez15@gmail.com>",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^24.19.2",
+    "typescript": "~6.0"
+  }
+}
