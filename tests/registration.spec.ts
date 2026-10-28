@@ -25,12 +25,14 @@ test.describe('Scenario A: User registration', { tag: '@regression' }, () => {
       await test.step('Verify the registration form is displayed', () =>
         registerPage.expectLoaded());
 
-      await registerPage.register(user);
+      await registerPage.fillForm(user);
 
-      await test.step('Verify the success message and the redirect to the login page', async () => {
-        await expect(registerPage.successMessage).toBeVisible();
-        await loginPage.expectLoaded();
-      });
+      // The success message only stays for 2 s before the redirect, so the check starts right
+      // before the click: a slow click acknowledgement (seen in Firefox under load) can outlast it.
+      await test.step('Submit and verify the success message', () =>
+        Promise.all([expect(registerPage.successMessage).toBeVisible(), registerPage.submit()]));
+
+      await test.step('Verify the redirect to the login page', () => loginPage.expectLoaded());
     },
   );
 });

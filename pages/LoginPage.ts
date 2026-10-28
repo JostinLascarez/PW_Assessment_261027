@@ -25,16 +25,34 @@ export class LoginPage extends BasePage {
   }
 
   /**
-   * Fills in and submits the login form. Empty values are typed as-is, so the same action also
-   * drives the field-validation cases.
+   * Fills in the login form without submitting it. Empty values are typed as-is, so the same
+   * action also drives the field-validation cases.
+   *
+   * @param credentials - Username and password to type.
+   */
+  @step('Fill in the login form')
+  async fillForm({ username, password }: UserCredentials): Promise<void> {
+    await this.usernameInput.fill(username);
+    await this.passwordInput.fill(password);
+  }
+
+  /**
+   * Submits the login form. Kept separate from {@link LoginPage.fillForm} so a spec can start
+   * watching for short-lived feedback right before the click.
+   */
+  @step('Submit the login form')
+  async submit(): Promise<void> {
+    await this.signInButton.click();
+  }
+
+  /**
+   * Fills in and submits the login form.
    *
    * @param credentials - Username and password to submit.
    */
-  @step('Submit the login form')
-  async login({ username, password }: UserCredentials): Promise<void> {
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
-    await this.signInButton.click();
+  async login(credentials: UserCredentials): Promise<void> {
+    await this.fillForm(credentials);
+    await this.submit();
   }
 
   /** Follows the "Register here" link to the registration page. */

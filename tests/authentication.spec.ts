@@ -75,12 +75,17 @@ test.describe('Scenario B: Authentication', { tag: '@regression' }, () => {
   test.describe('Invalid credentials', { tag: '@negative' }, () => {
     for (const { scenario, credentials } of invalidLogins) {
       test(`rejects ${scenario} with "Invalid username or password"`, async ({ loginPage }) => {
-        await loginPage.login(credentials);
+        await loginPage.fillForm(credentials);
 
-        await test.step('Verify the error message and no redirect', async () => {
-          await expect(loginPage.invalidCredentialsError).toBeVisible();
-          await loginPage.expectLoaded();
-        });
+        // The application hides the error after 5 s, so the check starts right before the click:
+        // a slow click acknowledgement (seen in Firefox under load) can outlast the message.
+        await test.step('Submit and verify the error message', () =>
+          Promise.all([
+            expect(loginPage.invalidCredentialsError).toBeVisible(),
+            loginPage.submit(),
+          ]));
+
+        await test.step('Verify the user stays on the login page', () => loginPage.expectLoaded());
       });
     }
   });
